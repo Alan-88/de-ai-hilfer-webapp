@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De-AI-Hilfer 设计画布</title>
+    
+    <!-- 1. 引入 Tailwind CSS 用于快速构建现代化界面 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 引入优雅的 Google 字体 'Inter' -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* 3. 设置基础样式和字体 */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 4. 自定义滚动条样式，提升细节质感 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+        html.dark ::-webkit-scrollbar-thumb {
+            background-color: rgba(107, 114, 128, 0.5);
+        }
+    </style>
+    
+    <script>
+        // 5. Tailwind CSS 暗色模式配置: 
+        //    我们通过JS监听系统主题，并给<html>标签加上'dark'类，
+        //    这样所有 tailwind 的 dark: 前缀样式就会自动生效。
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+
+<!-- 整体页面容器，设置亮/暗色背景和文字颜色 -->
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <!-- 主内容区，使用 flex 布局实现垂直居中 -->
+    <div class="min-h-screen flex flex-col items-center justify-start pt-20 px-4">
+
+        <!-- Logo 和标题区 -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white">
+                De-AI-Hilfer
+            </h1>
+            <p class="mt-4 text-lg text-gray-500 dark:text-gray-400">
+                你的下一代个人德语学习助理
+            </p>
+        </div>
+
+        <!-- 搜索卡片 -->
+        <div class="w-full max-w-2xl mx-auto">
+            <div class="relative bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300">
+                <input 
+                    type="text" 
+                    placeholder="输入德语单词，例如 'Hilfe'..." 
+                    class="w-full bg-transparent text-lg pl-6 pr-16 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-shadow"
+                    value="helfen"
+                >
+                <button class="absolute top-1/2 right-3 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-3 flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 结果展示区 (静态示例) -->
+        <div class="w-full max-w-2xl mx-auto mt-8">
+            <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 p-8 transition-all duration-300">
+                
+                <!-- 结果头部 -->
+                <div class="flex items-center gap-4 mb-4">
+                    <h2 class="text-4xl font-bold text-gray-900 dark:text-white">helfen</h2>
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full dark:bg-green-900 dark:text-green-300">知识库</span>
+                </div>
+                
+                <!-- 模拟 Markdown 内容 -->
+                <div class="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
+                    <p class="lead text-xl">/ˈhɛlfən/</p>
+                    
+                    <h4>核心释义 (Bedeutung)</h4>
+                    <ul>
+                        <li><strong>v.</strong> 帮助, 援助, 协助</li>
+                        <li><em>English: to help, to assist</em></li>
+                    </ul>
+                    
+                    <h4>💡 应用与例句 (Anwendung & Beispiele)</h4>
+                    <ul>
+                        <li><strong>固定搭配 (Kollokationen)</strong>
+                            <ul>
+                                <li>um Hilfe bitten (请求帮助)</li>
+                                <li>Hilfe leisten (提供帮助)</li>
+                            </ul>
+                        </li>
+                        <li><strong>例句 (Beispielsätze)</strong>
+                            <ol>
+                                <li>Ich brauche dringend Ihre Hilfe. (我急需您的帮助。)</li>
+                                <li>Vielen Dank für deine schnelle Hilfe! (非常感谢你的及时帮助！)</li>
+                            </ol>
+                        </li>
+                    </ul>
+
+                    <h4>📐 语法详情 (Grammatik)</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr>
+                                    <th>特征</th>
+                                    <th>详情</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>词性</strong></td>
+                                    <td>不规则动词 (unregelmäßiges Verb)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>搭配格</strong></td>
+                                    <td>第三格 (Dativ)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>现在时</strong></td>
+                                    <td>ich helfe, du <strong>hilfst</strong>, er/sie/es <strong>hilft</strong></td>
+                                </tr>
+                                 <tr>
+                                    <td><strong>过去时</strong></td>
+                                    <td>ich <strong>half</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>完成时</strong></td>
+                                    <td>hat <strong>geholfen</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="text-center mt-16 pb-8">
+            <p class="text-gray-400 dark:text-gray-500 text-sm">De-AI-Hilfer V4.0 Web Client</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
