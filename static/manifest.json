@@ -1,0 +1,16 @@
+{
+  "name": "De-AI-Hilfer",
+  "short_name": "DeAIHilfer",
+  "description": "你的下一代个人德语学习助理",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
