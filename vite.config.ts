@@ -13,7 +13,7 @@ export default defineConfig({
 			usePolling: true,
 		},
 		allowedHosts: [
-			'vip.xg.frp.one' // <-- 把你的 FRP 公网域名加到这里
+			'*'
 		]
 	}
 });
