@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { AnalyzeResponse, RecentItem, Suggestion, FollowUpItem, IntelligentSearchRequest } from '$lib/types';
+  import type { AnalyzeResponse, RecentItem, Suggestion, DBSuggestion, FollowUpItem, IntelligentSearchRequest, SuggestionType } from '$lib/types';
   import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
   import FollowUp from '$lib/components/FollowUp.svelte';
   import ManagementActions from '$lib/components/ManagementActions.svelte';
@@ -74,7 +74,7 @@
       const response = await fetch(`https://de-ai-hilfer-api.onrender.com/api/v1/suggestions?q=${encodeURIComponent(searchQuery)}`);
       if (response.ok) {
         const data = await response.json();
-        suggestions = data.suggestions.filter((s: any) => s.suggestion_type === 'db_match');
+        suggestions = data.suggestions.filter((s: Suggestion) => s.suggestion_type === 'db_match');
         showSuggestions = suggestions.length > 0;
       }
     } catch (e) {
@@ -227,15 +227,31 @@
       <div class="absolute top-full w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 z-10 p-2">
         <ul class="space-y-1">
           {#each suggestions as suggestion}
-            <li>
-              <button
-                class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                on:click={() => handleSearch(suggestion.query_text)}
-              >
-                <p class="font-semibold text-gray-900 dark:text-white pointer-events-none">{suggestion.query_text}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400 truncate pointer-events-none">{suggestion.preview}</p>
-              </button>
-            </li>
+            {#if suggestion.suggestion_type === 'db_match'}
+              <li>
+                <button
+                  class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  on:click={() => handleSearch((suggestion as DBSuggestion).query_text)}
+                >
+                  <p class="font-semibold text-gray-900 dark:text-white pointer-events-none">{(suggestion as DBSuggestion).query_text}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 truncate pointer-events-none">{(suggestion as DBSuggestion).preview}</p>
+                </button>
+              </li>
+            {:else if suggestion.suggestion_type === 'spell_correction'}
+              <li>
+                <button
+                  class="w-full text-left p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  on:click={() => handleSearch((suggestion as any).corrected_query)}
+                >
+                  <p class="font-semibold text-gray-900 dark:text-white pointer-events-none">
+                    ↩️ {(suggestion as any).corrected_query}
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 truncate pointer-events-none">
+                    拼写修正: {(suggestion as any).original_query}
+                  </p>
+                </button>
+              </li>
+            {/if}
           {/each}
         </ul>
       </div>
