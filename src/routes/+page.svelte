@@ -197,7 +197,15 @@
 </Modal>
 
 <Modal bind:showModal={showWordLibraryManager} on:close={() => showWordLibraryManager = false}>
-  <WordLibraryManager on:close={() => showWordLibraryManager = false} on:wordAdded={handleWordAdded} />
+<WordLibraryManager
+    on:close={() => showWordLibraryManager = false}
+    on:wordAdded={handleWordAdded}
+  />
+    on:close={() => showWordLibraryManager = false}
+    on:wordAdded={handleWordAdded}
+  />
+    on:wordAdded={handleWordAdded}
+  />
 </Modal>
 
 <div class="min-h-screen flex flex-col items-center justify-start pt-20 px-4 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">

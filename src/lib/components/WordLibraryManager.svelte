@@ -6,14 +6,22 @@
 
   export let onWordAdded: () => void;
 
-  let allWords = [];
+  interface WordData {
+    query_text: string;
+    preview: string;
+    entry_type?: string;
+    entry_id?: number;
+    analysis_markdown?: string;
+  }
+
+  let allWords: WordData[] = [];
   let isLoading = false;
   let error: string | null = null;
   let showAddModal = false;
-  let selectedWord = null;
+  let selectedWord: WordData | null = null;
   let searchQuery = '';
-  let filteredWords = [];
-  let learningStats = null;
+  let filteredWords: WordData[] = [];
+  let learningStats: any = null;
 
   onMount(async () => {
     await loadAllWords();
@@ -24,11 +32,41 @@
     isLoading = true;
     error = null;
     try {
-      const response = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/entries');
+      // 先获取所有条目的基本信息
+      const response = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/entries/all');
       if (!response.ok) throw new Error('获取词库失败');
-      const data = await response.json();
-      allWords = data;
-      filteredWords = data;
+      const basicData = await response.json();
+      
+      // 为每个条目获取详细信息以获得entry_id
+      const detailedWords = await Promise.all(
+        basicData.map(async (word: WordData) => {
+          try {
+            const detailResponse = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/analyze', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                query_text: word.query_text, 
+                entry_type: word.entry_type || 'WORD' 
+              })
+            });
+            if (detailResponse.ok) {
+              const detailData = await detailResponse.json();
+              return {
+                ...word,
+                entry_id: detailData.entry_id,
+                analysis_markdown: detailData.analysis_markdown
+              };
+            }
+            return word;
+          } catch (e) {
+            console.error(`Failed to get details for ${word.query_text}:`, e);
+            return word;
+          }
+        })
+      );
+      
+      allWords = detailedWords;
+      filteredWords = detailedWords;
     } catch (e: any) {
       error = e.message;
     } finally {
@@ -121,7 +159,7 @@
           <p class="text-sm text-gray-600 dark:text-gray-400">平均难度</p>
         </div>
         <div class="text-center">
-          <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+          <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">-</p>
           <p class="text-sm text-gray-600 dark:text-gray-400">掌握分布</p>
         </div>
       </div>

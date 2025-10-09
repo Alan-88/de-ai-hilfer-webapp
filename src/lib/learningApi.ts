@@ -89,7 +89,7 @@ export async function getLearningStats(): Promise<any> {
  * 获取所有词库单词
  */
 export async function getAllWords(): Promise<any[]> {
-  const response = await fetch(`https://de-ai-hilfer-api.onrender.com/api/v1/entries`);
+  const response = await fetch(`https://de-ai-hilfer-api.onrender.com/api/v1/entries/all`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || `获取词库失败: ${response.status}`);
