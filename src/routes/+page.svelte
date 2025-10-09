@@ -8,6 +8,7 @@
   import FullDictionary from '$lib/components/FullDictionary.svelte';
   import AdvancedSearch from '$lib/components/AdvancedSearch.svelte';
   import DataManagement from '$lib/components/DataManagement.svelte'; // 1. 导入 DataManagement
+  import WordLibraryManager from '$lib/components/WordLibraryManager.svelte'; // 导入词库管理
   import ServerStatus from '$lib/components/ServerStatus.svelte';
 
   // --- 状态管理 ---
@@ -22,6 +23,7 @@
   let showFullDictionary = false;
   let showAdvancedSearch = false;
   let showDataManagement = false; // 2. 添加用于控制模态框的状态
+  let showWordLibraryManager = false; // 3. 添加词库管理状态
   let installPromptEvent: any = null;
 
   // --- API 调用与逻辑 ---
@@ -143,6 +145,13 @@
     fetchRecentItems();
   }
 
+  // 4. 添加词库管理相关事件函数
+  function handleWordAdded(event: CustomEvent<string>) {
+    showWordLibraryManager = false;
+    showSuccessToast(event.detail);
+    fetchRecentItems();
+  }
+
   function handleInstallClick() {
     if (installPromptEvent) {
       installPromptEvent.prompt();
@@ -185,6 +194,10 @@
 
 <Modal bind:showModal={showFullDictionary} on:close={() => showFullDictionary = false}>
   <FullDictionary on:close={() => showFullDictionary = false} on:itemClick={handleItemClickFromModal} />
+</Modal>
+
+<Modal bind:showModal={showWordLibraryManager} on:close={() => showWordLibraryManager = false}>
+  <WordLibraryManager on:close={() => showWordLibraryManager = false} on:wordAdded={handleWordAdded} />
 </Modal>
 
 <div class="min-h-screen flex flex-col items-center justify-start pt-20 px-4 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
@@ -308,6 +321,9 @@
         <div class="flex justify-between items-center mb-4 border-t dark:border-gray-700 pt-4">
           <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">知识库操作</h3>
           <div class="flex items-center space-x-4">
+            <button on:click={() => showWordLibraryManager = true} class="text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">
+              词库管理
+            </button>
             <button on:click={() => showDataManagement = true} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
               备份/恢复
             </button>
