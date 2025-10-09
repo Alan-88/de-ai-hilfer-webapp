@@ -127,3 +127,97 @@ export interface AliasCreateRequest {
   alias_text: string;
   entry_query_text: string;
 }
+
+// --- 学习模块相关类型定义 ---
+
+/**
+ * 学习进度数据结构
+ */
+export interface LearningProgress {
+  id: number;
+  entry_id: number;
+  mastery_level: number;
+  ease_factor: number;
+  interval: number;
+  repetitions: number;
+  next_review_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * 学习会话中的单词数据
+ */
+export interface SessionWord {
+  entry_id: number;
+  query_text: string;
+  preview: string;
+  analysis_markdown?: string;
+  mastery_level?: number;
+  ease_factor?: number;
+  interval?: number;
+  repetitions?: number;
+  next_review_at?: string;
+}
+
+/**
+ * 学习会话响应数据结构
+ */
+export interface LearningSessionResponse {
+  review_words: SessionWord[];
+  new_words: SessionWord[];
+}
+
+/**
+ * 深度解析响应数据结构
+ */
+export interface InsightResponse {
+  insight: string;
+}
+
+/**
+ * AI动态例句响应数据结构
+ */
+export interface DynamicExampleResponse {
+  example_sentence: string;
+  translation: string;
+}
+
+/**
+ * AI动态测验响应数据结构
+ */
+export interface DynamicQuizResponse {
+  question: string;
+  options: string[];
+  correct_answer: string;
+  explanation?: string;
+}
+
+/**
+ * 复习质量评分枚举
+ */
+export enum ReviewQuality {
+  COMPLETELY_FORGOT = 0,
+  INCORRECT_BUT_REMEMBERED = 1,
+  INCORRECT_WITH_HINT = 2,
+  HESITANT = 3,
+  CORRECT_WITH_HESITATION = 4,
+  PERFECT = 5
+}
+
+/**
+ * 卡片状态枚举
+ */
+export enum CardState {
+  FRONT = 'front',
+  HINT = 'hint',
+  BACK = 'back'
+}
+
+/**
+ * 学习模式枚举
+ */
+export enum LearningMode {
+  CLASSIC = 'classic',
+  QUIZ = 'quiz'
+}

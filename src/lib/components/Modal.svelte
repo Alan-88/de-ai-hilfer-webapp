@@ -23,8 +23,10 @@
   <div 
     class="fixed inset-0 bg-black/60 z-40"
     on:click={closeModal}
+    on:keydown={(e) => e.key === 'Enter' && closeModal()}
     role="button"
     tabindex="-1"
+    aria-label="关闭模态框"
   ></div>
 
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
