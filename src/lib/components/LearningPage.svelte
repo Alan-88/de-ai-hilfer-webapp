@@ -68,7 +68,7 @@
 
   $: currentWord = sessionWords[currentIndex];
   $: isCompleted = currentIndex >= sessionWords.length;
-  $: progress = sessionWords.length > 0 ? ((currentIndex + 1) / sessionWords.length) * 100 : 0;
+  $: progress = sessionWords.length > 0 ? (currentIndex / sessionWords.length) * 100 : 0;
 </script>
 
 <div class="min-h-screen flex flex-col items-center justify-start pt-20 px-4 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">

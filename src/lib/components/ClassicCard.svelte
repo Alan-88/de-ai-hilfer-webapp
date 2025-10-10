@@ -22,7 +22,8 @@
     isLoading = true;
     error = null;
     try {
-      const hintData = await getInsightHint(wordData.entry_id);
+      const entryId = wordData.entry_id || wordData.id;
+      const hintData = await getInsightHint(entryId);
       insightContent = hintData.insight;
       cardState = CardState.HINT;
     } catch (e: any) {
@@ -49,7 +50,8 @@
     
     isSubmitting = true;
     try {
-      await submitReview(wordData.entry_id, quality);
+      const entryId = wordData.entry_id || wordData.id;
+      await submitReview(entryId, quality);
       onReviewed();
     } catch (e: any) {
       error = e.message || '提交复习结果失败';
@@ -62,7 +64,8 @@
     
     isSubmitting = true;
     try {
-      const data = await generateDynamicExample(wordData.entry_id);
+      const entryId = wordData.entry_id || wordData.id;
+      const data = await generateDynamicExample(entryId);
       exampleData = data;
       showExampleModal = true;
     } catch (e: any) {
@@ -126,7 +129,8 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">提示：深度解析</p>
       </div>
       
-      <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+      <!-- 固定高度的提示展示区域 -->
+      <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 h-64 overflow-y-auto">
         <MarkdownRenderer markdownContent={insightContent} />
       </div>
       
@@ -156,7 +160,8 @@
         </h3>
       </div>
       
-      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6">
+      <!-- 固定高度的释义展示区域 -->
+      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 h-64 overflow-y-auto border border-gray-200 dark:border-gray-700">
         <MarkdownRenderer markdownContent={wordData.analysis_markdown || wordData.preview} />
       </div>
       
