@@ -103,10 +103,10 @@
       setTimeout(() => successMessage = null, 3000);
   }
   
-  function handleWordClickFromManager(event: CustomEvent<AnalyzeResponse>) {
+  function handleWordClickFromManager(word: AnalyzeResponse) {
     showWordLibraryManager = false;
-    searchResult = event.detail;
-    searchQuery = event.detail.query_text;
+    searchResult = word;
+    searchQuery = word.query_text;
     fetchRecentItems();
   }
 
@@ -116,7 +116,7 @@
   function handleEntryDeleted(event: CustomEvent<string>) { showSuccessToast(event.detail); searchResult = null; fetchRecentItems(); }
   function handleAdvancedSearchSuccess(event: CustomEvent<AnalyzeResponse>) { showAdvancedSearch = false; searchResult = event.detail; searchQuery = event.detail.query_text; fetchRecentItems(); }
   function handleRestoreSuccess(event: CustomEvent<string>) { showDataManagement = false; showSuccessToast(event.detail); clearSearch(); fetchRecentItems(); }
-  function handleWordAdded(event: CustomEvent<string>) { showWordLibraryManager = false; showSuccessToast(event.detail); fetchRecentItems(); }
+  function handleWordAdded(message: string) { showWordLibraryManager = false; showSuccessToast(message); fetchRecentItems(); }
 
   function handleInstallClick() {
     if (installPromptEvent) {
@@ -146,7 +146,7 @@
   <AdvancedSearch initialTerm={searchQuery} on:close={() => showAdvancedSearch = false} on:searchSuccess={handleAdvancedSearchSuccess} />
 </Modal>
 <Modal bind:showModal={showWordLibraryManager} on:close={() => showWordLibraryManager = false} fullScreen={true}>
-  <WordLibraryManager on:close={() => showWordLibraryManager = false} on:wordAdded={handleWordAdded} on:wordClick={handleWordClickFromManager} />
+  <WordLibraryManager onClose={() => showWordLibraryManager = false} onWordAdded={handleWordAdded} onWordClick={handleWordClickFromManager} />
 </Modal>
 
 <div class="w-full max-w-3xl mx-auto flex flex-col h-screen bg-gray-50 dark:bg-gray-900">

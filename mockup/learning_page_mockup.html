@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能学习 - UI 原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .prose table { width: 100%; }
+        .prose td, .prose th { padding: 0.5rem 1rem; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+
+    <div class="w-full max-w-3xl mx-auto flex flex-col h-screen">
+
+        <!-- 1. 粘性头部 (Sticky Header) -->
+        <header class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-sm pt-6 pb-4 border-b border-gray-700">
+            <div class="px-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">智能学习</h1>
+                        <p id="header-subtitle" class="text-sm text-gray-400">由每日动态队列驱动</p>
+                    </div>
+                    <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg text-sm">返回</button>
+                </div>
+                <!-- 进度条 -->
+                <div id="progress-bar-container" class="bg-gray-800 rounded-xl p-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <span id="progress-label" class="text-xs font-medium text-gray-400">学习进度</span>
+                        <span id="progress-text" class="text-xs font-medium text-gray-400">5 / 15</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-1.5">
+                        <div id="progress-fill" class="bg-blue-500 h-1.5 rounded-full" style="width: 33%"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 2. 主要滚动/内容区域 -->
+        <main class="flex-1 overflow-y-auto p-4">
+            
+            <!-- 容器：所有状态都将在这里切换 -->
+            <div id="view-container">
+
+                <!-- 场景 1: 经典卡片 - 正面 -->
+                <div id="classic-front-view">
+                    <div class="text-center pt-12 pb-8">
+                        <h2 class="text-5xl font-bold text-white mb-12">bekannt</h2>
+                        <div class="space-y-3 max-w-xs mx-auto">
+                            <button class="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg">忘记了</button>
+                            <button class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg">查看答案</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 场景 2: 经典卡片 - 背面 (带评分) -->
+                <div id="classic-back-view" class="hidden">
+                    <div class="bg-gray-800/50 rounded-2xl border border-gray-700 p-6 space-y-6">
+                        <div class="text-center">
+                            <h3 class="text-3xl font-bold text-white">bekannt</h3>
+                        </div>
+                        <div class="bg-gray-900/50 rounded-lg p-4 h-56 overflow-y-auto border border-gray-700">
+                            <div class="prose prose-invert max-w-none text-gray-300">
+                                <h4>核心释义</h4>
+                                <ul><li><strong>adj.</strong> 著名的, 出名的; 已知的, 熟悉的</li></ul>
+                                <h4>例句</h4>
+                                <ol><li>Dieser Schauspieler ist sehr bekannt. (这位演员非常有名。)</li></ol>
+                            </div>
+                        </div>
+                        <!-- 评分组件 -->
+                        <div class="space-y-2">
+                            <p class="text-sm font-medium text-gray-400 text-center">请评价你的记忆质量：</p>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                <button class="px-3 py-2 text-sm font-medium rounded-lg border border-red-800 text-red-300 hover:bg-red-900/30">完全忘记</button>
+                                <button class="px-3 py-2 text-sm font-medium rounded-lg border border-orange-800 text-orange-300 hover:bg-orange-900/30">错误但有印象</button>
+                                <button class="px-3 py-2 text-sm font-medium rounded-lg border border-yellow-800 text-yellow-300 hover:bg-yellow-900/30">提示后记起</button>
+                                <button class="px-3 py-2 text-sm font-medium rounded-lg border border-blue-800 text-blue-300 hover:bg-blue-900/30">犹豫但正确</button>
+                                <button class="px-3 py-2 text-sm font-medium rounded-lg border border-green-800 text-green-300 hover:bg-green-900/30">正确但犹豫</button>
+                                <button class="px-3 py-2 text-sm font-medium rounded-lg border border-emerald-800 text-emerald-300 hover:bg-emerald-900/30">完美回忆</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 场景 3: 问答卡片 - 未回答 -->
+                <div id="quiz-view" class="hidden">
+                     <div class="bg-gray-800/50 rounded-2xl border border-gray-700 p-6 space-y-6">
+                        <div class="text-center">
+                             <h3 class="text-xl font-semibold text-white">Welches Wort bedeutet "berühmt" oder "populär"?</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <button class="w-full text-left p-4 rounded-lg border-2 border-gray-600 hover:bg-gray-700">unbekannt</button>
+                            <button class="w-full text-left p-4 rounded-lg border-2 border-blue-400 bg-blue-900/30">bekannt</button>
+                            <button class="w-full text-left p-4 rounded-lg border-2 border-gray-600 hover:bg-gray-700">fremd</button>
+                            <button class="w-full text-left p-4 rounded-lg border-2 border-gray-600 hover:bg-gray-700">selten</button>
+                        </div>
+                         <button class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg">提交答案</button>
+                    </div>
+                </div>
+
+                <!-- 场景 4: 学习完成 -->
+                <div id="completed-view" class="hidden">
+                    <div class="bg-gray-800/50 rounded-2xl p-12 text-center">
+                        <h2 class="text-3xl font-bold text-white mb-2">🎉 今日学习完成！</h2>
+                        <div class="space-y-3 mt-6">
+                            <button class="w-full max-w-xs mx-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg">开始新的一天</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+             <!-- 切换状态的调试按钮 -->
+            <div class="mt-8 p-4 bg-gray-800 rounded-lg text-xs">
+                <p class="font-bold mb-2">UI 状态切换 (仅用于演示)</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="switchView('classic-front-view')" class="px-2 py-1 bg-gray-700 rounded">经典-正面</button>
+                    <button onclick="switchView('classic-back-view')" class="px-2 py-1 bg-gray-700 rounded">经典-背面</button>
+                    <button onclick="switchView('quiz-view')" class="px-2 py-1 bg-gray-700 rounded">问答模式</button>
+                    <button onclick="switchView('completed-view')" class="px-2 py-1 bg-gray-700 rounded">已完成</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+<script>
+    const views = ['classic-front-view', 'classic-back-view', 'quiz-view', 'completed-view'];
+    function switchView(targetId) {
+        views.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (id === targetId) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            }
+        });
+        // 根据不同视图调整头部信息
+        const subtitle = document.getElementById('header-subtitle');
+        const progressContainer = document.getElementById('progress-bar-container');
+        if (targetId === 'completed-view') {
+            subtitle.textContent = "太棒了，休息一下吧！";
+            progressContainer.style.display = 'none';
+        } else {
+            subtitle.textContent = "由每日动态队列驱动";
+            progressContainer.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>

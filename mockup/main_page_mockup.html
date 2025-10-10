@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主界面 - UI 原型 (终版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+
+    <div class="w-full max-w-3xl mx-auto flex flex-col h-screen">
+
+        <!-- 1. 粘性头部 (Sticky Header) - 保持不变 -->
+        <header class="sticky-header bg-gray-900/80 backdrop-blur-sm pt-6 pb-4">
+            <div class="px-4">
+                <div class="text-center mb-4">
+                    <h1 class="text-3xl font-extrabold text-white">De-AI-Hilfer</h1>
+                    <p class="text-sm text-gray-400">你的下一代个人德语学习助理</p>
+                </div>
+                <form>
+                    <div class="relative">
+                        <input type="text" placeholder="输入德语单词，例如 'Hilfe'..." class="w-full bg-gray-800 text-md pl-10 pr-12 py-3 rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                             <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <button type="submit" aria-label="Search" class="absolute top-1/2 right-2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-2 flex items-center justify-center transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </header>
+
+        <!-- 2. 主要滚动区域 (Main Scrollable Area) -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="p-4 space-y-6">
+
+                <!-- 仪表盘视图 -->
+                <div class="space-y-6" id="dashboard-view">
+                    <!-- 学习模块卡片 -->
+                    <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+                        <h3 class="text-xl font-bold mb-2">智能学习</h3>
+                        <p class="text-sm opacity-80 mb-4">基于间隔重复算法，开始今天的学习任务。</p>
+                        <button class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition-colors">开始学习</button>
+                    </div>
+
+                    <!-- 知识库操作 (调整为三列布局) -->
+                    <div>
+                        <h3 class="text-md font-semibold text-gray-400 mb-3 px-2">知识库</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg text-left transition-colors">
+                                <h4 class="font-semibold text-white">📚 词库管理</h4>
+                                <p class="text-sm text-gray-400 mt-1">浏览、搜索和管理你的所有词汇。</p>
+                            </button>
+                            <button class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg text-left transition-colors">
+                                <h4 class="font-semibold text-white">🔍 高级查询</h4>
+                                <p class="text-sm text-gray-400 mt-1">通过模糊拼写和中文提示查找单词。</p>
+                            </button>
+                             <button class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg text-left transition-colors">
+                                <h4 class="font-semibold text-white">⚙️ 数据管理</h4>
+                                <p class="text-sm text-gray-400 mt-1">备份或从文件恢复你的知识库。</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 最近历史 -->
+                    <div>
+                        <h3 class="text-md font-semibold text-gray-400 mb-3 px-2">最近历史</h3>
+                        <div class="space-y-2">
+                             <button class="w-full text-left p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors">
+                                <p class="font-semibold text-white">Haus</p>
+                                <p class="text-sm text-gray-400 truncate">n. 房子; 住宅; 家庭</p>
+                            </button>
+                            <button class="w-full text-left p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors">
+                                <p class="font-semibold text-white">gehen</p>
+                                <p class="text-sm text-gray-400 truncate">v. 去; 走; 进行</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 3. 终版页脚 (Final Footer) -->
+        <footer class="px-4 py-3 border-t border-gray-700 text-xs text-gray-400">
+            <div class="flex items-center justify-between">
+                <!-- 左侧: 服务器状态 -->
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span>服务在线</span>
+                    <button class="hover:underline">(刷新)</button>
+                </div>
+                <!-- 右侧: 其他操作 -->
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center space-x-1 cursor-pointer">
+                        <input type="checkbox" class="h-3 w-3 rounded-sm text-blue-500 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                        <span>保持唤醒</span>
+                    </label>
+                    <!-- "安装应用" 按钮被移到这里，变得更低调 -->
+                    <button class="hover:underline">安装应用</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+</body>
+</html>

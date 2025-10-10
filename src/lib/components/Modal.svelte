@@ -38,12 +38,12 @@
 <svelte:window on:keydown={handleKeydown}/>
 
 {#if showModal}
-  <div 
-    class="fixed inset-0 bg-black/60 z-40"
+  <button 
+    class="fixed inset-0 bg-black/60 z-40 cursor-pointer border-0"
     on:click={closeModal}
-    role="button"
-    tabindex="-1"
-  ></div>
+    aria-label="关闭模态框"
+    type="button"
+  ></button>
 
   <div 
     class:fixed={true}
