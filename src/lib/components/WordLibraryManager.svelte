@@ -1,11 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { createEventDispatcher } from 'svelte';
   import { addWordToLearning, getLearningProgress } from '$lib/learningApi';
   import Modal from './Modal.svelte';
   import MarkdownRenderer from './MarkdownRenderer.svelte';
 
-  const dispatch = createEventDispatcher();
+  // 使用回调props替代事件分发器
+  export let onClose: () => void;
+  export let onWordClick: (word: any) => void;
+  export let onWordAdded: (message: string) => void;
 
   interface WordData {
     query_text: string;
@@ -13,6 +15,7 @@
     entry_type?: string;
     entry_id?: number;
     analysis_markdown?: string;
+    _error?: string; // 添加可选的错误属性
   }
 
   let allWords: WordData[] = [];
@@ -24,15 +27,19 @@
   let filteredWords: WordData[] = [];
   let learningStats: any = null;
   let learningProgress: any = null; // 存储学习进度信息
+  let addModalError: string | null = null; // 添加模态框专用错误
+  let filterStatus: 'all' | 'learning' | 'review' | 'mastered' | 'available' = 'all'; // 筛选状态
 
   onMount(async () => {
-    await loadAllWords();
-    await loadLearningStats();
+    // 调整 onMount 加载顺序，确保学习进度先被加载
+    isLoading = true;
     await loadLearningProgress();
+    await loadAllWords(); // loadAllWords 内部会设置 isLoading = false
+    await loadLearningStats();
   });
 
   async function loadAllWords() {
-    isLoading = true;
+    // isLoading = true; // isLoading 在 onMount 中统一管理
     error = null;
     try {
       // 先获取所有条目的基本信息
@@ -137,9 +144,14 @@
     }
   }
 
-  $: filteredWords = allWords.filter(word => 
-    word.query_text.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  $: filteredWords = allWords.filter(word => {
+    const matchesSearch = word.query_text.toLowerCase().includes(searchQuery.toLowerCase());
+    if (filterStatus === 'all') {
+      return matchesSearch;
+    }
+    const status = getWordStatus(word);
+    return matchesSearch && status === filterStatus;
+  });
 
   async function handleAddWord(word: any) {
     try {
@@ -148,14 +160,47 @@
         throw new Error('单词ID缺失，无法添加到学习计划');
       }
       await addWordToLearning(entryId);
+      
+      // --- 新增代码开始 ---
+      // 成功添加后，关闭确认弹窗
       showAddModal = false;
       selectedWord = null;
-      dispatch('wordAdded');
+      
+      // 调用回调函数通知父组件
+      onWordAdded(`成功添加 "${word.query_text}" 到学习计划`);
+      // --- 新增代码结束 ---
+
+      // 刷新学习进度和统计（保持不变）
+      await loadLearningProgress();
       await loadLearningStats();
-      await loadLearningProgress(); // 重新加载学习进度
+      
+      // 手动更新列表中的单词状态（保持不变）
+      const wordIndex = allWords.findIndex(w => w.entry_id === entryId);
+      if (wordIndex !== -1) {
+        allWords[wordIndex] = { ...allWords[wordIndex] };
+        // 重新应用筛选和搜索
+        filteredWords = allWords.filter(w => {
+          const matchesSearch = w.query_text.toLowerCase().includes(searchQuery.toLowerCase());
+          if (filterStatus === 'all') {
+            return matchesSearch;
+          }
+          const status = getWordStatus(w);
+          return matchesSearch && status === filterStatus;
+        });
+      }
+      
     } catch (e: any) {
-      error = e.message;
+      addModalError = e.message;
+      // 可以在这里也更新 selectedWord 的错误状态，以便在弹窗中显示
+      if (selectedWord) {
+        // 使用一个新的对象来触发响应式更新
+        selectedWord = { ...selectedWord, _error: e.message };
+      }
     }
+  }
+
+  function handleWordClick(word: WordData) {
+    onWordClick(word);
   }
 
   function openAddModal(word: any) {
@@ -203,17 +248,34 @@
       default: return '未开始';
     }
   }
+
+  const filterTabs: { status: 'all' | 'learning' | 'review' | 'mastered' | 'available', text: string }[] = [
+    { status: 'all', text: '全部' },
+    { status: 'available', text: '未开始' },
+    { status: 'learning', text: '学习中' },
+    { status: 'review', text: '需复习' },
+    { status: 'mastered', text: '已掌握' }
+  ];
 </script>
 
 <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 p-6">
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">📚 词库管理</h2>
-    <button
-      on:click={() => loadAllWords()}
-      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
-    >
-      刷新词库
-    </button>
+    <div class="flex items-center gap-4">
+      <button
+        on:click={() => loadAllWords()}
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+      >
+        刷新
+      </button>
+      <button 
+        on:click={() => onClose()}
+        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+        aria-label="关闭"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
   </div>
 
   {#if learningStats}
@@ -239,6 +301,21 @@
       </div>
     </div>
   {/if}
+
+  <!-- 筛选标签页 -->
+  <div class="flex items-center border-b border-gray-200 dark:border-gray-700 mb-6">
+    {#each filterTabs as tab}
+      <button
+        on:click={() => filterStatus = tab.status}
+        class="px-4 py-2 -mb-px text-sm font-medium transition-colors duration-200 border-b-2
+          {filterStatus === tab.status
+            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+            : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}"
+      >
+        {tab.text}
+      </button>
+    {/each}
+  </div>
 
   <!-- 搜索框 -->
   <div class="mb-6">
@@ -269,7 +346,13 @@
   {:else}
     <div class="space-y-4 max-h-96 overflow-y-auto">
       {#each filteredWords as word}
-        <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
+      <div 
+        class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+        on:click={() => handleWordClick(word)}
+        on:keydown={(e) => e.key === 'Enter' && handleWordClick(word)}
+        role="button"
+        tabindex="0"
+      >
           <div class="flex items-start justify-between">
             <div class="flex-1">
               <div class="flex items-center gap-3 mb-2">
@@ -290,7 +373,7 @@
             <div class="ml-4">
               {#if getWordStatus(word) === 'available'}
                 <button
-                  on:click={() => openAddModal(word)}
+                  on:click|stopPropagation={() => openAddModal(word)}
                   class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
                 >
                   添加学习
@@ -322,10 +405,10 @@
         </div>
       </div>
       
-      {#if error}
+      {#if addModalError}
         <div class="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-4" role="alert">
           <strong class="font-bold">错误:</strong>
-          <span class="block sm:inline">{error}</span>
+          <span class="block sm:inline">{addModalError}</span>
         </div>
       {/if}
       

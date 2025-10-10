@@ -5,7 +5,8 @@
   import FollowUp from '$lib/components/FollowUp.svelte';
   import ManagementActions from '$lib/components/ManagementActions.svelte';
   import Modal from '$lib/components/Modal.svelte';
-  import FullDictionary from '$lib/components/FullDictionary.svelte';
+  // 不再需要 FullDictionary
+  // import FullDictionary from '$lib/components/FullDictionary.svelte';
   import AdvancedSearch from '$lib/components/AdvancedSearch.svelte';
   import DataManagement from '$lib/components/DataManagement.svelte'; // 1. 导入 DataManagement
   import WordLibraryManager from '$lib/components/WordLibraryManager.svelte'; // 导入词库管理
@@ -146,9 +147,16 @@
   }
 
   // 4. 添加词库管理相关事件函数
-  function handleWordAdded(event: CustomEvent<string>) {
-    showWordLibraryManager = false;
-    showSuccessToast(event.detail);
+  function handleWordAdded(message: string) {
+    showSuccessToast(message);
+    fetchRecentItems();
+  }
+
+  // 新增函数：处理从词库管理传来的点击事件
+  function handleWordClickFromManager(wordData: AnalyzeResponse) {
+    showWordLibraryManager = false; // 关闭词库管理模态框
+    searchResult = wordData; // 将点击的单词数据显示在主页面
+    searchQuery = wordData.query_text; // 同步搜索框
     fetchRecentItems();
   }
 
@@ -192,16 +200,14 @@
   />
 </Modal>
 
-<Modal bind:showModal={showFullDictionary} on:close={() => showFullDictionary = false}>
-  <FullDictionary on:close={() => showFullDictionary = false} on:itemClick={handleItemClickFromModal} />
-</Modal>
 
-<Modal bind:showModal={showWordLibraryManager} on:close={() => showWordLibraryManager = false}>
-  <WordLibraryManager
-    on:close={() => showWordLibraryManager = false}
-    on:wordAdded={handleWordAdded}
-  />
-</Modal>
+  <Modal bind:showModal={showWordLibraryManager} on:close={() => showWordLibraryManager = false}>
+    <WordLibraryManager
+      onClose={() => showWordLibraryManager = false}
+      onWordAdded={handleWordAdded}
+      onWordClick={handleWordClickFromManager}
+    />
+  </Modal>
 
 <div class="min-h-screen flex flex-col items-center justify-start pt-20 px-4 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
   <div class="text-center mb-12">
@@ -331,9 +337,6 @@
             </button>
             <button on:click={() => showAdvancedSearch = true} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
               高级查询
-            </button>
-            <button on:click={() => showFullDictionary = true} class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-              浏览全部 →
             </button>
           </div>
         </div>
