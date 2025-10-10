@@ -95,7 +95,7 @@
             学习进度
           </span>
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {currentIndex + 1} / {sessionWords.length}
+            {Math.min(currentIndex + 1, sessionWords.length)} / {sessionWords.length}
           </span>
         </div>
         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
