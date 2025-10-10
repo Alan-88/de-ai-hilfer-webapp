@@ -14,6 +14,9 @@ export default defineConfig({
 		},
 		allowedHosts: [
 			'*'
-		]
+		],
+		fs: {
+			allow: ['..'] // 允许访问上级目录，包括项目根目录的图标文件
+		}
 	}
 });
