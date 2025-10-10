@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { addWordToLearning, getLearningProgress } from '$lib/learningApi';
+  import { addWordToLearning } from '$lib/learningApi';
   import Modal from './Modal.svelte';
   import MarkdownRenderer from './MarkdownRenderer.svelte';
 
@@ -137,7 +137,9 @@
 
   async function loadLearningProgress() {
     try {
-      learningProgress = await getLearningProgress();
+      const response = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/learning/progress');
+      if (!response.ok) throw new Error('获取学习进度失败');
+      learningProgress = await response.json();
       console.log('Learning progress loaded:', learningProgress);
     } catch (e: any) {
       console.error('获取学习进度失败:', e);
