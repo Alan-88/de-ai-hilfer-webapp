@@ -1,40 +1,108 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type { SessionWord } from '$lib/types';
-  import { LearningMode } from '$lib/types';
+  import { LearningMode, ReviewQuality } from '$lib/types';
   import { getLearningSession } from '$lib/learningApi';
   import ClassicCard from './ClassicCard.svelte';
   import QuizCard from './QuizCard.svelte';
 
-  const QUIZ_MODE_MASTERY_THRESHOLD = 3; // 熟练度达到3级时，开始进入Quiz模式
-  const QUIZ_MODE_PROBABILITY = 0.7; // 达到阈值后，有70%的概率进入Quiz模式
+  const QUIZ_MODE_MASTERY_THRESHOLD = 3;
+  const QUIZ_MODE_PROBABILITY = 0.7;
 
+  // --- 核心状态变量 ---
   let sessionWords: SessionWord[] = [];
   let currentIndex = 0;
+  let relearningQueue: SessionWord[] = [];
+  let isRelearningPhase = false;
+  let initialWordCount = 0; // 用于计算进度条
+
   let isLoading = true;
   let error: string | null = null;
   let learningMode: LearningMode = LearningMode.CLASSIC;
   
-  // 重学队列相关状态
-  let relearningQueue: SessionWord[] = []; // 用于存放答错的单词
-  let isRelearningPhase = false; // 标记是否已进入"巩固阶段"
+  // --- 状态持久化 ---
+  const SESSION_STORAGE_KEY = 'learning_session_state';
+
+  function saveSessionState() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const state = {
+        sessionWords,
+        currentIndex,
+        relearningQueue,
+        isRelearningPhase,
+        initialWordCount
+      };
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
+    }
+  }
+
+  function loadSessionState() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState);
+          // 简单验证一下 state 是否有效
+          if (state && Array.isArray(state.sessionWords) && state.sessionWords.length > 0) {
+            sessionWords = state.sessionWords;
+            currentIndex = state.currentIndex;
+            relearningQueue = state.relearningQueue;
+            isRelearningPhase = state.isRelearningPhase;
+            initialWordCount = state.initialWordCount;
+            isLoading = false;
+            return true; // 表示成功从 localStorage 加载
+          }
+        } catch (e) {
+          console.error("Failed to parse saved session state:", e);
+          clearSessionState();
+        }
+      }
+    }
+    return false; // 表示没有加载到有效状态
+  }
+
+  function clearSessionState() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+  }
 
   onMount(async () => {
-    await loadSession();
+    // 尝试从 localStorage 恢复会话，如果失败或不存在，则加载新会话
+    if (!loadSessionState()) {
+      await loadNewSession();
+    }
+  });
+  
+  // 页面关闭前清理状态
+  onDestroy(() => {
+    // 可以选择在这里清理，或者让用户手动开始新会话
+    // clearSessionState(); 
   });
 
-  async function loadSession() {
+  // --- 学习流程控制 ---
+  
+  async function loadNewSession() {
     isLoading = true;
     error = null;
+    clearSessionState(); // 开始新会话前清空旧状态
+
     try {
       const { review_words, new_words } = await getLearningSession(5);
-      // 注意：后端返回的 review_words 包含 progress 信息，而 new_words 只有 entry 信息
       const combined = [...review_words, ...new_words];
-      // 打乱顺序
-      sessionWords = combined.sort(() => Math.random() - 0.5);
+      
+      if (combined.length === 0) {
+          sessionWords = [];
+          initialWordCount = 0;
+      } else {
+          sessionWords = combined.sort(() => Math.random() - 0.5);
+          initialWordCount = sessionWords.length;
+      }
+      
       currentIndex = 0;
-      relearningQueue = []; // 清空
-      isRelearningPhase = false; // 重置
+      relearningQueue = [];
+      isRelearningPhase = false;
+
     } catch (e: any) {
       error = e.message || '获取学习会话失败';
     } finally {
@@ -43,247 +111,147 @@
   }
 
   function handleReviewed(word: SessionWord, quality: number) {
-    // 如果记忆质量差 (例如评分 < 4)，则将该词加入"重学队列"
+    // 记忆质量差，加入"重学队列"
     if (quality < 4) {
-      relearningQueue.push(word);
+      // 避免重复添加
+      if (!relearningQueue.some(item => item.id === word.id)) {
+          relearningQueue.push(word);
+      }
     }
 
-    // 推进逻辑
     if (isRelearningPhase) {
-      // 如果在巩固阶段, 从队列头部移除当前单词
-      relearningQueue.shift();
-      // 如果队列中还有词，继续显示下一个（通过响应式变量自动更新）
-      // 如果队列空了，则整个会话完成
-      if (relearningQueue.length === 0) {
-        currentIndex++; // 触发 isCompleted
-      }
-    } else if (currentIndex < sessionWords.length - 1) {
-      // 如果在学习阶段，正常推进
-      currentIndex++;
-    } else {
-      // 学习阶段结束
-      if (relearningQueue.length > 0) {
-        // 如果重学队列中有词，则进入巩固阶段
-        isRelearningPhase = true;
-        // 强制Svelte更新视图
-        relearningQueue = [...relearningQueue]; 
+      // 巩固阶段：如果答对了，就从队列中移除
+      if (quality >= 4) {
+        relearningQueue = relearningQueue.filter(item => item.id !== word.id);
       } else {
-        // 如果重学队列为空，则整个会话完成
-        currentIndex++;
+        // 如果答错了，把它移到队尾，实现轮换
+        const failedWord = relearningQueue.shift();
+        if (failedWord) {
+            relearningQueue.push(failedWord);
+        }
       }
+    } else {
+      // 学习阶段：正常推进
+      currentIndex++;
+    }
+
+    // 检查是否需要切换到巩固阶段
+    if (!isRelearningPhase && currentIndex >= sessionWords.length && relearningQueue.length > 0) {
+      isRelearningPhase = true;
     }
   }
 
   function handleRestart() {
-    currentIndex = 0;
-    learningMode = LearningMode.CLASSIC;
+    loadNewSession();
   }
 
-  function getNewSession() {
-    loadSession();
-  }
+  // --- 响应式计算属性 ---
 
-  // 自适应模式切换逻辑
-  $: if (sessionWords[currentIndex]) {
-    const currentWord = sessionWords[currentIndex];
-    
-    // 默认经典模式
-    learningMode = LearningMode.CLASSIC;
-    
-    // 新词(没有mastery_level)或熟练度低的词，使用经典模式
+  // 当前应该学习的单词
+  $: currentWord = isRelearningPhase ? relearningQueue[0] : sessionWords[currentIndex];
+
+  // 是否已完成所有学习
+  $: isCompleted = !isLoading && initialWordCount > 0 && currentIndex >= sessionWords.length && relearningQueue.length === 0;
+
+  // 进度条计算（只反映主线学习进度）
+  $: progress = initialWordCount > 0 ? (currentIndex / initialWordCount) * 100 : 0;
+
+  // 自动切换学习模式
+  $: if (currentWord) {
+    learningMode = LearningMode.CLASSIC; // 默认
     if (currentWord.mastery_level && currentWord.mastery_level >= QUIZ_MODE_MASTERY_THRESHOLD) {
       if (Math.random() < QUIZ_MODE_PROBABILITY) {
         learningMode = LearningMode.QUIZ;
       }
     }
   }
-
-  $: currentWord = isRelearningPhase ? relearningQueue[0] : sessionWords[currentIndex];
-  $: isCompleted = currentIndex >= sessionWords.length && relearningQueue.length === 0;
-  $: progress = sessionWords.length > 0 ? (currentIndex / sessionWords.length) * 100 : 0;
+  
+  // 每次状态变化后都保存
+  $: if (!isLoading) {
+      saveSessionState();
+  }
 </script>
 
 <div class="min-h-screen flex flex-col items-center justify-start pt-20 px-4 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-  <!-- 头部 -->
   <div class="w-full max-w-4xl mx-auto mb-8">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">智能学习</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">基于间隔重复的个性化学习体验</p>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
+            {#if isRelearningPhase}
+                正在巩固今天不熟悉的单词...
+            {:else}
+                基于间隔重复的个性化学习体验
+            {/if}
+        </p>
       </div>
-      <button
-        on:click={() => window.history.back()}
-        class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
-      >
+       <button on:click={() => window.history.back()} class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200">
         返回
       </button>
     </div>
 
-    <!-- 进度条 -->
-    {#if sessionWords.length > 0}
+    {#if initialWordCount > 0}
       <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
         <div class="flex items-center justify-between mb-2">
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            学习进度
+            {#if isRelearningPhase}
+              巩固阶段 (剩余 {relearningQueue.length} 个)
+            {:else}
+              学习进度
+            {/if}
           </span>
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {Math.min(currentIndex + 1, sessionWords.length)} / {sessionWords.length}
+            {Math.min(currentIndex, initialWordCount)} / {initialWordCount}
           </span>
         </div>
         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <div 
-            class="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-            style="width: {progress}%"
-          ></div>
+          <div class="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out" style="width: {progress}%"></div>
         </div>
       </div>
     {/if}
   </div>
 
-  <!-- 主要内容 -->
   <div class="w-full max-w-4xl mx-auto">
     {#if isLoading}
       <div class="text-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p class="text-gray-600 dark:text-gray-400">正在准备学习内容...</p>
       </div>
-
     {:else if error}
-      <div class="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-6 py-4 rounded-xl" role="alert">
+       <div class="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-6 py-4 rounded-xl" role="alert">
         <div class="text-center">
           <strong class="font-bold text-lg">加载失败</strong>
           <p class="mt-2">{error}</p>
-          <button
-            on:click={getNewSession}
-            class="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
-          >
+          <button on:click={loadNewSession} class="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
             重试
           </button>
         </div>
       </div>
-
     {:else if isCompleted}
-      <!-- 学习完成 -->
       <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 p-12 text-center">
         <div class="mb-6">
-          <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600 dark:text-green-400">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-          </div>
-          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            🎉 今日学习完成！
-          </h2>
-          <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">
-            你已经完成了 {sessionWords.length} 个单词的学习
-          </p>
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">🎉 今日学习完成！</h2>
         </div>
-
         <div class="space-y-3">
-          <button
-            on:click={handleRestart}
-            class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
-          >
-            重新学习
-          </button>
-          <button
-            on:click={getNewSession}
-            class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
-          >
+          <button on:click={handleRestart} class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
             开始新的学习
           </button>
-          <button
-            on:click={() => window.history.back()}
-            class="w-full px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200"
-          >
-            返回主页
-          </button>
         </div>
       </div>
-
     {:else if currentWord}
-      <!-- 学习卡片 -->
       <div class="mb-6">
-        <!-- 模式指示器 -->
-        <div class="flex justify-center mb-4">
-          {#if learningMode === LearningMode.QUIZ}
-            <span class="inline-flex items-center px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-sm font-medium rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
-              智能问答模式
-            </span>
-          {:else}
-            <span class="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm font-medium rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              经典学习模式
-            </span>
-          {/if}
-        </div>
-
         {#if learningMode === LearningMode.QUIZ}
-          <QuizCard 
-            wordData={currentWord} 
-            onReviewed={handleReviewed} 
-          />
+          <QuizCard wordData={currentWord} onReviewed={handleReviewed} />
         {:else}
-          <ClassicCard 
-            wordData={currentWord} 
-            onReviewed={handleReviewed} 
-          />
+          <ClassicCard wordData={currentWord} onReviewed={handleReviewed} />
         {/if}
       </div>
-
-      <!-- 学习统计 -->
-      <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
-        <div class="flex justify-around text-center">
-          <div>
-            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{currentIndex + 1}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">当前进度</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-green-600 dark:text-green-400">{sessionWords.length - currentIndex - 1}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">剩余单词</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{Math.round(progress)}%</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">完成度</p>
-          </div>
-        </div>
-      </div>
     {:else}
-      <!-- 没有学习内容 -->
       <div class="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 p-12 text-center">
-        <div class="mb-6">
-          <div class="w-20 h-20 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-600 dark:text-yellow-400">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-          </div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            暂无学习内容
-          </h2>
-          <p class="text-gray-600 dark:text-gray-400 mb-6">
-            今天没有需要复习的单词，也没有新词要学习
-          </p>
-        </div>
-
-        <button
-          on:click={getNewSession}
-          class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
-        >
-          刷新页面
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">暂无学习内容</h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-6">今天没有需要复习的单词，也没有新词要学习。</p>
+        <button on:click={loadNewSession} class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+          刷新会话
         </button>
       </div>
     {/if}
