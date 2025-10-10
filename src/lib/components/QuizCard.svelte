@@ -24,7 +24,8 @@
     isLoading = true;
     error = null;
     try {
-      const data = await generateDynamicQuiz(wordData.entry_id);
+      const entryId = wordData.entry_id || wordData.id;
+      const data = await generateDynamicQuiz(entryId);
       quizData = data;
     } catch (e: any) {
       error = e.message || '生成测验题失败';
@@ -48,7 +49,8 @@
     
     isSubmitting = true;
     try {
-      await submitReview(wordData.entry_id, quality);
+      const entryId = wordData.entry_id || wordData.id;
+      await submitReview(entryId, quality);
       onReviewed();
     } catch (e: any) {
       error = e.message || '提交复习结果失败';
@@ -129,7 +131,8 @@
     </div>
 
   {:else if quizData}
-    <div class="space-y-6">
+    <!-- 固定在顶部的题目和选项区域 -->
+    <div class="space-y-6 mb-6">
       <!-- 题目 -->
       <div class="text-center">
         <div class="mb-4">
@@ -176,26 +179,31 @@
           提交答案
         </button>
       {/if}
+    </div>
 
-      <!-- 答案揭晓后 -->
-      {#if isAnswered}
-        <div class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-          <!-- 正确答案说明 -->
-          {#if quizData.explanation}
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">解释：</p>
-              <p class="text-gray-700 dark:text-gray-300">{quizData.explanation}</p>
-            </div>
-          {/if}
+    <!-- 答案揭晓后的固定布局 -->
+    {#if isAnswered}
+      <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
+        <!-- 正确答案说明 -->
+        {#if quizData.explanation}
+          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+            <p class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">解释：</p>
+            <p class="text-gray-700 dark:text-gray-300">{quizData.explanation}</p>
+          </div>
+        {/if}
 
-          <!-- 单词完整解析 -->
-          <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6">
-            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              {wordData.query_text} - 完整解析
-            </h4>
+        <!-- 固定高度的释义展示区域 -->
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+            {wordData.query_text} - 完整解析
+          </h4>
+          <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-6 h-64 overflow-y-auto border border-gray-200 dark:border-gray-700">
             <MarkdownRenderer markdownContent={wordData.analysis_markdown || wordData.preview} />
           </div>
+        </div>
 
+        <!-- 固定在底部的控制区域 -->
+        <div class="space-y-4">
           <!-- 评分 -->
           <QualityRating 
             onRating={submitReviewWithQuality} 
@@ -211,7 +219,7 @@
             {/if}
           </div>
         </div>
-      {/if}
-    </div>
+      </div>
+    {/if}
   {/if}
 </div>

@@ -197,19 +197,13 @@
 </Modal>
 
 <Modal bind:showModal={showWordLibraryManager} on:close={() => showWordLibraryManager = false}>
-<WordLibraryManager
+  <WordLibraryManager
     on:close={() => showWordLibraryManager = false}
-    on:wordAdded={handleWordAdded}
-  />
-    on:close={() => showWordLibraryManager = false}
-    on:wordAdded={handleWordAdded}
-  />
     on:wordAdded={handleWordAdded}
   />
 </Modal>
 
 <div class="min-h-screen flex flex-col items-center justify-start pt-20 px-4 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-  
   <div class="text-center mb-12">
     <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white">De-AI-Hilfer</h1>
     <p class="mt-4 text-lg text-gray-500 dark:text-gray-400">你的下一代个人德语学习助理</p>

@@ -149,7 +149,8 @@ export interface LearningProgress {
  * 学习会话中的单词数据
  */
 export interface SessionWord {
-  entry_id: number;
+  id: number;
+  entry_id?: number; // 复习单词有entry_id，新单词只有id
   query_text: string;
   preview: string;
   analysis_markdown?: string;

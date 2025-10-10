@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { addWordToLearning } from '$lib/learningApi';
   import Modal from './Modal.svelte';
   import MarkdownRenderer from './MarkdownRenderer.svelte';
 
-  export let onWordAdded: () => void;
+  const dispatch = createEventDispatcher();
 
   interface WordData {
     query_text: string;
@@ -36,11 +37,13 @@
       const response = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/entries/all');
       if (!response.ok) throw new Error('获取词库失败');
       const basicData = await response.json();
+      console.log('Basic data from /entries/all:', basicData);
       
       // 为每个条目获取详细信息以获得entry_id
       const detailedWords = await Promise.all(
         basicData.map(async (word: WordData) => {
           try {
+            console.log(`Fetching details for: ${word.query_text}`);
             const detailResponse = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/analyze', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -49,25 +52,64 @@
                 entry_type: word.entry_type || 'WORD' 
               })
             });
+            
             if (detailResponse.ok) {
               const detailData = await detailResponse.json();
+              console.log(`✅ Success - Details for ${word.query_text}:`, {
+                entry_id: detailData.entry_id,
+                has_entry_id: !!detailData.entry_id,
+                full_response: detailData
+              });
+              
+              if (!detailData.entry_id) {
+                console.error(`❌ Missing entry_id for ${word.query_text}:`, detailData);
+                return {
+                  ...word,
+                  entry_id: undefined,
+                  analysis_markdown: detailData.analysis_markdown,
+                  _error: 'Missing entry_id in response'
+                };
+              }
+              
               return {
                 ...word,
                 entry_id: detailData.entry_id,
                 analysis_markdown: detailData.analysis_markdown
               };
+            } else {
+              const errorText = await detailResponse.text();
+              console.error(`❌ Failed to get details for ${word.query_text}: HTTP ${detailResponse.status}`, errorText);
+              return {
+                ...word,
+                entry_id: undefined,
+                _error: `HTTP ${detailResponse.status}: ${errorText}`
+              };
             }
-            return word;
-          } catch (e) {
-            console.error(`Failed to get details for ${word.query_text}:`, e);
-            return word;
+          } catch (e: any) {
+            console.error(`❌ Exception getting details for ${word.query_text}:`, e);
+            return {
+              ...word,
+              entry_id: undefined,
+              _error: e.message || 'Unknown error'
+            };
           }
         })
       );
       
-      allWords = detailedWords;
-      filteredWords = detailedWords;
+      // 过滤掉没有entry_id的单词，并记录统计信息
+      const validWords = detailedWords.filter(word => word.entry_id);
+      const invalidWords = detailedWords.filter(word => !word.entry_id);
+      
+      console.log(`📊 Load complete: ${validWords.length} valid words, ${invalidWords.length} invalid words`);
+      if (invalidWords.length > 0) {
+        console.log('❌ Invalid words:', invalidWords);
+        error = `${invalidWords.length} 个单词无法获取ID，请检查控制台`;
+      }
+      
+      allWords = validWords;
+      filteredWords = validWords;
     } catch (e: any) {
+      console.error('❌ Load all words failed:', e);
       error = e.message;
     } finally {
       isLoading = false;
@@ -90,10 +132,14 @@
 
   async function handleAddWord(word: any) {
     try {
-      await addWordToLearning(word.id);
+      const entryId = word.entry_id || word.id;
+      if (!entryId) {
+        throw new Error('单词ID缺失，无法添加到学习计划');
+      }
+      await addWordToLearning(entryId);
       showAddModal = false;
       selectedWord = null;
-      onWordAdded();
+      dispatch('wordAdded');
       await loadLearningStats();
     } catch (e: any) {
       error = e.message;
