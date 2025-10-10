@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
-  import { addWordToLearning } from '$lib/learningApi';
+  import { addWordToLearning, getLearningProgress } from '$lib/learningApi';
   import Modal from './Modal.svelte';
   import MarkdownRenderer from './MarkdownRenderer.svelte';
 
@@ -130,9 +130,7 @@
 
   async function loadLearningProgress() {
     try {
-      const response = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/learning/progress');
-      if (!response.ok) throw new Error('获取学习进度失败');
-      learningProgress = await response.json();
+      learningProgress = await getLearningProgress();
       console.log('Learning progress loaded:', learningProgress);
     } catch (e: any) {
       console.error('获取学习进度失败:', e);
@@ -171,8 +169,8 @@
       return 'available';
     }
     
-    // 查找单词的学习进度
-    const progress = learningProgress.find((p: any) => p.entry_id === word.entry_id);
+    // 查找单词的学习进度 - 新API返回的是对象映射
+    const progress = learningProgress.progress?.[word.entry_id];
     
     if (!progress) {
       return 'available'; // 未开始学习
@@ -181,7 +179,7 @@
     // 根据mastery_level判断状态
     if (progress.mastery_level >= 4) {
       return 'mastered'; // 已掌握
-    } else if (progress.next_review_date && new Date(progress.next_review_date) <= new Date()) {
+    } else if (progress.next_review_at && new Date(progress.next_review_at) <= new Date()) {
       return 'review'; // 需要复习
     } else {
       return 'learning'; // 学习中

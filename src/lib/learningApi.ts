@@ -74,6 +74,18 @@ export async function generateDynamicQuiz(entryId: number): Promise<DynamicQuizR
 }
 
 /**
+ * 获取学习进度信息
+ */
+export async function getLearningProgress(): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/progress`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `获取学习进度失败: ${response.status}`);
+  }
+  return response.json();
+}
+
+/**
  * 获取学习统计信息
  */
 export async function getLearningStats(): Promise<any> {
