@@ -14,6 +14,10 @@
   let isLoading = true;
   let error: string | null = null;
   let learningMode: LearningMode = LearningMode.CLASSIC;
+  
+  // 重学队列相关状态
+  let relearningQueue: SessionWord[] = []; // 用于存放答错的单词
+  let isRelearningPhase = false; // 标记是否已进入"巩固阶段"
 
   onMount(async () => {
     await loadSession();
@@ -29,6 +33,8 @@
       // 打乱顺序
       sessionWords = combined.sort(() => Math.random() - 0.5);
       currentIndex = 0;
+      relearningQueue = []; // 清空
+      isRelearningPhase = false; // 重置
     } catch (e: any) {
       error = e.message || '获取学习会话失败';
     } finally {
@@ -36,10 +42,36 @@
     }
   }
 
-  function handleNextWord() {
-    currentIndex += 1;
-    // 重置学习模式，让系统重新决定
-    learningMode = LearningMode.CLASSIC;
+  function handleReviewed(word: SessionWord, quality: number) {
+    // 如果记忆质量差 (例如评分 < 4)，则将该词加入"重学队列"
+    if (quality < 4) {
+      relearningQueue.push(word);
+    }
+
+    // 推进逻辑
+    if (isRelearningPhase) {
+      // 如果在巩固阶段, 从队列头部移除当前单词
+      relearningQueue.shift();
+      // 如果队列中还有词，继续显示下一个（通过响应式变量自动更新）
+      // 如果队列空了，则整个会话完成
+      if (relearningQueue.length === 0) {
+        currentIndex++; // 触发 isCompleted
+      }
+    } else if (currentIndex < sessionWords.length - 1) {
+      // 如果在学习阶段，正常推进
+      currentIndex++;
+    } else {
+      // 学习阶段结束
+      if (relearningQueue.length > 0) {
+        // 如果重学队列中有词，则进入巩固阶段
+        isRelearningPhase = true;
+        // 强制Svelte更新视图
+        relearningQueue = [...relearningQueue]; 
+      } else {
+        // 如果重学队列为空，则整个会话完成
+        currentIndex++;
+      }
+    }
   }
 
   function handleRestart() {
@@ -66,8 +98,8 @@
     }
   }
 
-  $: currentWord = sessionWords[currentIndex];
-  $: isCompleted = currentIndex >= sessionWords.length;
+  $: currentWord = isRelearningPhase ? relearningQueue[0] : sessionWords[currentIndex];
+  $: isCompleted = currentIndex >= sessionWords.length && relearningQueue.length === 0;
   $: progress = sessionWords.length > 0 ? (currentIndex / sessionWords.length) * 100 : 0;
 </script>
 
@@ -201,12 +233,12 @@
         {#if learningMode === LearningMode.QUIZ}
           <QuizCard 
             wordData={currentWord} 
-            onReviewed={handleNextWord} 
+            onReviewed={handleReviewed} 
           />
         {:else}
           <ClassicCard 
             wordData={currentWord} 
-            onReviewed={handleNextWord} 
+            onReviewed={handleReviewed} 
           />
         {/if}
       </div>

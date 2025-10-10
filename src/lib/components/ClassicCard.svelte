@@ -8,7 +8,7 @@
   import MarkdownRenderer from './MarkdownRenderer.svelte';
 
   export let wordData: SessionWord;
-  export let onReviewed: () => void;
+  export let onReviewed: (word: SessionWord, quality: number) => void = () => {};
 
   let cardState: CardState = CardState.FRONT;
   let insightContent = '';
@@ -52,7 +52,7 @@
     try {
       const entryId = wordData.entry_id || wordData.id;
       await submitReview(entryId, quality);
-      onReviewed();
+      onReviewed(wordData, quality);
     } catch (e: any) {
       error = e.message || '提交复习结果失败';
       isSubmitting = false;

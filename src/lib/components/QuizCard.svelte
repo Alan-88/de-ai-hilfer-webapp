@@ -7,7 +7,7 @@
   import MarkdownRenderer from './MarkdownRenderer.svelte';
 
   export let wordData: SessionWord;
-  export let onReviewed: () => void;
+  export let onReviewed: (word: SessionWord, quality: number) => void = () => {};
 
   let quizData: { question: string; options: string[]; correct_answer: string; explanation?: string } | null = null;
   let selectedOption: string | null = null;
@@ -51,7 +51,7 @@
     try {
       const entryId = wordData.entry_id || wordData.id;
       await submitReview(entryId, quality);
-      onReviewed();
+      onReviewed(wordData, quality);
     } catch (e: any) {
       error = e.message || '提交复习结果失败';
       isSubmitting = false;
