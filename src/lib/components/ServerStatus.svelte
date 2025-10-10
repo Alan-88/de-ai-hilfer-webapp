@@ -58,22 +58,25 @@
     }
   }
   
-  // 当用户勾选/取消时，管理定时器
-  $: if (typeof window !== 'undefined') {
-    manageKeepAliveTimer();
-  }
-
+  // --- 修改开始 ---
+  // 将依赖浏览器的代码全部移入 onMount
   onMount(() => {
-    // 恢复用户偏好
     const savedPreference = localStorage.getItem('keepAliveEnabled') === 'true';
     if (savedPreference) {
       keepAliveEnabled = true;
     } else {
-      // 如果用户没有选择“保持唤醒”，则在打开页面时进行一次探测
       checkStatus();
     }
+    
+    // 返回一个清理函数
     return () => clearInterval(keepAliveIntervalId);
   });
+
+  // 使用响应式语句来监听 keepAliveEnabled 的变化
+  $: if (typeof window !== 'undefined') {
+      manageKeepAliveTimer();
+  }
+  // --- 修改结束 ---
 
   const statusMap = {
     unknown: { color: 'bg-gray-400', text: '状态未知' },
