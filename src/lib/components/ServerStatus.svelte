@@ -87,7 +87,7 @@
   }
 </script>
 
-<div class="flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-400 p-2 border-t dark:border-gray-700 justify-center">
+<div class="flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700 justify-center">
   <div class="flex items-center space-x-2">
     <span class="w-3 h-3 rounded-full {statusMap[serverStatus].color}"></span>
     <span>{statusMap[serverStatus].text}</span>

@@ -149,7 +149,8 @@
   <WordLibraryManager onClose={() => showWordLibraryManager = false} onWordAdded={handleWordAdded} onWordClick={handleWordClickFromManager} />
 </Modal>
 
-<div class="w-full max-w-3xl mx-auto flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+<div class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+  <div class="w-full max-w-3xl mx-auto flex flex-col h-screen">
 
   <header class="sticky top-0 z-20 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm pt-6 pb-4">
     <div class="px-4">
@@ -268,7 +269,7 @@
     </div>
   </main>
   
-  <footer class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+  <footer class="px-4 py-3">
       <ServerStatus />
       {#if installPromptEvent}
         <button on:click={handleInstallClick} class="text-xs text-blue-600 dark:text-blue-400 hover:underline w-full text-center mt-2">
@@ -276,4 +277,5 @@
         </button>
       {/if}
   </footer>
+  </div>
 </div>

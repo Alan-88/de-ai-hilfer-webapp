@@ -1,11 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
 
   export let showModal: boolean = false;
   export let fullScreen: boolean = false;
 
   const dispatch = createEventDispatcher();
-
+  
   function closeModal() {
     dispatch('close');
   }
@@ -16,34 +17,28 @@
     }
   }
 
-  // --- 修改开始 ---
-  // onMount 确保这段代码只在浏览器中运行
+  // --- 修改: 优化副作用逻辑 ---
   onMount(() => {
-    // 监听键盘事件
-    window.addEventListener('keydown', handleKeydown);
-
-    // 如果是全屏模态框，在挂载时就禁止body滚动
-    if (showModal && fullScreen) {
-      document.body.classList.add('overflow-hidden');
+    // 确保只在浏览器中执行
+    if (browser) {
+      window.addEventListener('keydown', handleKeydown);
     }
-
-    // 返回一个清理函数，在组件销毁时执行
     return () => {
-      window.removeEventListener('keydown', handleKeydown);
-      document.body.classList.remove('overflow-hidden');
+      if (browser) {
+        window.removeEventListener('keydown', handleKeydown);
+        // 确保组件销毁时，移除body上的类
+        document.body.classList.remove('overflow-hidden');
+      }
     };
   });
 
-  // 使用响应式语句来处理模态框显示/隐藏时的 body 滚动
-  $: if (typeof document !== 'undefined' && fullScreen) {
+  $: if (browser && fullScreen) {
     if (showModal) {
       document.body.classList.add('overflow-hidden');
     } else {
       document.body.classList.remove('overflow-hidden');
     }
   }
-  // --- 修改结束 ---
-
 </script>
 
 {#if showModal}
