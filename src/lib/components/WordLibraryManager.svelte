@@ -39,84 +39,35 @@
   });
 
   async function loadAllWords() {
-    // isLoading = true; // isLoading 在 onMount 中统一管理
+    isLoading = true;
     error = null;
     try {
-      // 先获取所有条目的基本信息
+      // 核心改动：现在只调用一次 /entries/all 接口
       const response = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/entries/all');
-      if (!response.ok) throw new Error('获取词库失败');
-      const basicData = await response.json();
-      console.log('Basic data from /entries/all:', basicData);
-      
-      // 为每个条目获取详细信息以获得entry_id
-      const detailedWords = await Promise.all(
-        basicData.map(async (word: WordData) => {
-          try {
-            console.log(`Fetching details for: ${word.query_text}`);
-            const detailResponse = await fetch('https://de-ai-hilfer-api.onrender.com/api/v1/analyze', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                query_text: word.query_text, 
-                entry_type: word.entry_type || 'WORD' 
-              })
-            });
-            
-            if (detailResponse.ok) {
-              const detailData = await detailResponse.json();
-              console.log(`✅ Success - Details for ${word.query_text}:`, {
-                entry_id: detailData.entry_id,
-                has_entry_id: !!detailData.entry_id,
-                full_response: detailData
-              });
-              
-              if (!detailData.entry_id) {
-                console.error(`❌ Missing entry_id for ${word.query_text}:`, detailData);
-                return {
-                  ...word,
-                  entry_id: undefined,
-                  analysis_markdown: detailData.analysis_markdown,
-                  _error: 'Missing entry_id in response'
-                };
-              }
-              
-              return {
-                ...word,
-                entry_id: detailData.entry_id,
-                analysis_markdown: detailData.analysis_markdown
-              };
-            } else {
-              const errorText = await detailResponse.text();
-              console.error(`❌ Failed to get details for ${word.query_text}: HTTP ${detailResponse.status}`, errorText);
-              return {
-                ...word,
-                entry_id: undefined,
-                _error: `HTTP ${detailResponse.status}: ${errorText}`
-              };
-            }
-          } catch (e: any) {
-            console.error(`❌ Exception getting details for ${word.query_text}:`, e);
-            return {
-              ...word,
-              entry_id: undefined,
-              _error: e.message || 'Unknown error'
-            };
-          }
-        })
-      );
-      
-      // 过滤掉没有entry_id的单词，并记录统计信息
-      const validWords = detailedWords.filter(word => word.entry_id);
-      const invalidWords = detailedWords.filter(word => !word.entry_id);
-      
-      console.log(`📊 Load complete: ${validWords.length} valid words, ${invalidWords.length} invalid words`);
-      if (invalidWords.length > 0) {
-        console.log('❌ Invalid words:', invalidWords);
-        error = `${invalidWords.length} 个单词无法获取ID，请检查控制台`;
+      if (!response.ok) {
+        throw new Error('获取词库失败');
       }
       
+      const wordsFromApi = await response.json();
+
+      // 后端直接返回了我们需要的所有字段 (entry_id, query_text, preview)
+      // 我们只需要稍微适配一下数据结构，以确保 analysis_markdown 字段存在
+      const validWords = wordsFromApi.map((word: WordData) => ({
+          ...word,
+          analysis_markdown: word.preview // 在这个界面，预览就足够了
+      }));
+
       allWords = validWords;
-      filteredWords = validWords;
+      // 重新应用筛选和搜索
+      filteredWords = allWords.filter(word => {
+        const matchesSearch = word.query_text.toLowerCase().includes(searchQuery.toLowerCase());
+        if (filterStatus === 'all') {
+          return matchesSearch;
+        }
+        const status = getWordStatus(word);
+        return matchesSearch && status === filterStatus;
+      });
+
     } catch (e: any) {
       console.error('❌ Load all words failed:', e);
       error = e.message;
