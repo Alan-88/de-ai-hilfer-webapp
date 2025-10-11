@@ -131,7 +131,13 @@
     const progress = learningProgress.progress?.[word.entry_id];
     if (!progress) return 'available';
     if (progress.mastery_level >= 4) return 'mastered';
-    if (progress.next_review_at && new Date(progress.next_review_at) <= new Date()) return 'review';
+    
+    // By appending 'Z' to the datetime string, we explicitly tell JavaScript
+    // to parse it as a UTC date, aligning it with the backend's logic.
+    if (progress.next_review_at && new Date(progress.next_review_at + 'Z') <= new Date()) {
+      return 'review';
+    }
+    
     return 'learning';
   }
 

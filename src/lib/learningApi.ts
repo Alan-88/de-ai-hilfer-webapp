@@ -14,7 +14,7 @@ const API_BASE_URL = 'https://de-ai-hilfer-api.onrender.com/api/v1/learning';
  * 获取学习会话 V2: 获取当前需要学习的单词
  */
 export async function getLearningSession(newWordsLimit = 5): Promise<LearningSessionResponse> {
-  const response = await fetch(`${API_BASE_URL}/session?limit_new_words=${newWordsLimit}`);
+  const response = await fetch(`${API_BASE_URL}/session/v2?limit_new_words=${newWordsLimit}`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || `获取学习会话失败: ${response.status}`);
@@ -26,13 +26,14 @@ export async function getLearningSession(newWordsLimit = 5): Promise<LearningSes
  * 提交复习结果 V2
  */
 export async function submitReview(entryId: number, quality: ReviewQuality): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/review/${entryId}?quality=${quality}`, {
+  const response = await fetch(`${API_BASE_URL}/review/v2/${entryId}?quality=${quality}`, {
     method: 'POST'
   });
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || `提交复习结果失败: ${response.status}`);
   }
+  await response.json();
 }
 
 // --- 其他辅助 API 调用保持不变 ---
