@@ -173,7 +173,7 @@
     details:not([open]) > summary .collapsed-view { display: flex; }
 </style>
 
-<div class="flex flex-col h-full bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<div class="flex flex-1 flex-col min-h-0 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
     <header class="sticky top-0 z-20 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 p-4">
         <div class="flex items-center justify-between gap-4">
