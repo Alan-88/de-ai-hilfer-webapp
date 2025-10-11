@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="dark"> <head>
+<html lang="zh-CN" class="dark">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>词库管理 - UI 原型</title>
+    <title>词库管理 - UI 原型 (v4)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,15 +13,40 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background-color: rgba(107, 114, 128, 0.5); border-radius: 3px; }
+
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker,
+        details > summary::marker {
+            display: none;
+        }
+
+        .custom-arrow {
+            transition: transform 0.2s;
+        }
+        details[open] .custom-arrow {
+            transform: rotate(180deg);
+        }
+
+        details[open] > summary > .collapsed-view { display: none; }
+        details:not([open]) > summary > .expanded-view { display: none; }
+        details:not([open]) > .details-content { display: none; }
     </style>
 </head>
 <body class="bg-gray-900">
 
     <div class="w-full max-w-3xl mx-auto bg-gray-900 text-gray-200 flex flex-col h-screen">
 
-        <header class="sticky top-0 z-20 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700">
-            <div class="flex items-center justify-between p-4">
-                <h2 class="text-xl font-bold text-white">📚 词库管理</h2>
+        <header class="sticky top-0 z-20 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 p-4">
+            <div class="flex items-center justify-between gap-4">
+                <h2 class="text-xl font-bold text-white whitespace-nowrap">📚 词库管理</h2>
+                <div class="relative flex-1 min-w-0">
+                    <input type="text" placeholder="搜索词库..." class="w-full pl-9 pr-4 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                </div>
                 <div class="flex items-center gap-2">
                     <button class="p-2 rounded-full hover:bg-gray-700 transition-colors" aria-label="刷新">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -34,75 +60,50 @@
 
         <details class="border-b border-gray-700" open>
             <summary class="p-4 cursor-pointer hover:bg-gray-800 flex justify-between items-center">
-                <h3 class="text-md font-semibold text-white">📊 学习统计</h3>
-                <svg class="w-4 h-4 transition-transform transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                <div class="collapsed-view flex items-center w-full gap-1">
+                    <div class="flex-1 text-center font-semibold text-lg" title="总学习单词">📊</div>
+                    <div class="flex-1 text-center font-semibold text-lg text-blue-400" title="未开始">15</div>
+                    <div class="flex-1 text-center font-semibold text-lg text-yellow-400" title="学习中">0</div>
+                    <div class="flex-1 text-center font-semibold text-lg text-green-400" title="需复习">2.43</div>
+                    <div class="flex-1 text-center font-semibold text-lg text-purple-400" title="已掌握">-</div>
+                </div>
+                <h3 class="expanded-view text-md font-semibold text-white">📊 学习统计</h3>
+                <div class="custom-arrow">
+                    <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </div>
             </summary>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 pt-0">
-                <div class="text-center bg-gray-800/50 p-3 rounded-lg">
-                    <p class="text-2xl font-bold text-blue-400">15</p>
-                    <p class="text-xs text-gray-400">总学习单词</p>
-                </div>
-                <div class="text-center bg-gray-800/50 p-3 rounded-lg">
-                    <p class="text-2xl font-bold text-yellow-400">0</p>
-                    <p class="text-xs text-gray-400">今日待复习</p>
-                </div>
-                <div class="text-center bg-gray-800/50 p-3 rounded-lg">
-                    <p class="text-2xl font-bold text-green-400">2.43</p>
-                    <p class="text-xs text-gray-400">平均难度</p>
-                </div>
-                <div class="text-center bg-gray-800/50 p-3 rounded-lg">
-                    <p class="text-2xl font-bold text-purple-400">-</p>
-                    <p class="text-xs text-gray-400">掌握分布</p>
-                </div>
+            <div class="details-content grid grid-cols-2 md:grid-cols-4 gap-4 p-4 pt-0">
+                <div class="text-center bg-gray-800/50 p-3 rounded-lg"><p class="text-2xl font-bold text-blue-400">15</p><p class="text-xs text-gray-400">总学习单词</p></div>
+                <div class="text-center bg-gray-800/50 p-3 rounded-lg"><p class="text-2xl font-bold text-yellow-400">0</p><p class="text-xs text-gray-400">今日待复习</p></div>
+                <div class="text-center bg-gray-800/50 p-3 rounded-lg"><p class="text-2xl font-bold text-green-400">2.43</p><p class="text-xs text-gray-400">平均难度</p></div>
+                <div class="text-center bg-gray-800/50 p-3 rounded-lg"><p class="text-2xl font-bold text-purple-400">-</p><p class="text-xs text-gray-400">掌握分布</p></div>
             </div>
         </details>
         
-        <div class="sticky top-[73px] z-10 bg-gray-900 pt-4 pb-3 border-b border-gray-700">
-            <div class="px-4 mb-4">
+        <div class="sticky top-[73px] z-10 bg-gray-900 pt-3 pb-3 border-b border-gray-700">
+            <div class="px-4">
                 <div class="flex items-center space-x-1 bg-gray-800 rounded-lg p-1">
                     <button class="flex-1 px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white">全部</button>
                     <button class="flex-1 px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-700">未开始</button>
                     <button class="flex-1 px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-700">学习中</button>
                     <button class="flex-1 px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-700">需复习</button>
-                </div>
-            </div>
-            <div class="px-4">
-                <div class="relative">
-                    <input type="text" placeholder="搜索词库..." class="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
-                    </div>
+                    <button class="flex-1 px-3 py-1.5 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-700">已掌握</button>
                 </div>
             </div>
         </div>
 
         <main class="flex-1 overflow-y-auto">
             <div class="p-4 space-y-3">
-                <div class="bg-gray-800/50 rounded-lg p-4">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <h3 class="text-lg font-semibold text-white">-heit</h3>
-                                <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span>
-                            </div>
-                            <p class="text-sm text-gray-400">Suffix: 表示性质、状态、特征的抽象名词后缀</p>
-                        </div>
-                        <div class="ml-4">
-                            <button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">-keit</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">Suffix: 表示性质、状态、特征的抽象名词后缀</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
-                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">Ablauf</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-900/50 text-blue-300">学习中</span></div><p class="text-sm text-gray-400">过程, 流程, 经过, 期满</p></div><div class="ml-4"><div class="px-3 py-1 bg-gray-600 text-gray-400 text-sm font-medium rounded-lg">已添加</div></div></div></div>
-                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">ausstellen</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-900/50 text-yellow-300">需复习</span></div><p class="text-sm text-gray-400">展出, 颁发, 开具, 签发</p></div><div class="ml-4"><div class="px-3 py-1 bg-gray-600 text-gray-400 text-sm font-medium rounded-lg">已添加</div></div></div></div>
-                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">bekannt</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-900/50 text-green-300">已掌握</span></div><p class="text-sm text-gray-400">著名的, 已知的, 熟悉的</p></div><div class="ml-4"><div class="px-3 py-1 bg-gray-600 text-gray-400 text-sm font-medium rounded-lg">已添加</div></div></div></div>
-                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">bereiten</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">准备, 制作; 引起, 造成</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
-                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">Brunnen</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">井, 泉, 喷泉</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
-                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">Chipkarte</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">芯片卡, 智能卡</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">-heit</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">Suffix: 表示性质、状态...</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">-keit</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">Suffix: 表示性质、状态...</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">Ablauf</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-900/50 text-blue-300">学习中</span></div><p class="text-sm text-gray-400">m. 过程, 流程; 期满</p></div><div class="ml-4"><div class="px-3 py-1 bg-gray-600 text-gray-400 text-sm font-medium rounded-lg">已添加</div></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">ausstellen</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-900/50 text-yellow-300">需复习</span></div><p class="text-sm text-gray-400">v. 展出, 颁发, 开具</p></div><div class="ml-4"><div class="px-3 py-1 bg-gray-600 text-gray-400 text-sm font-medium rounded-lg">已添加</div></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">bekannt</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-green-900/50 text-green-300">已掌握</span></div><p class="text-sm text-gray-400">adj. 著名的, 已知的</p></div><div class="ml-4"><div class="px-3 py-1 bg-gray-600 text-gray-400 text-sm font-medium rounded-lg">已添加</div></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">bereiten</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">v. 准备, 制作; 引起</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">Brunnen</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">m. 井, 泉, 喷泉</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
+                <div class="bg-gray-800/50 rounded-lg p-4"><div class="flex items-start justify-between"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><h3 class="text-lg font-semibold text-white">Chipkarte</h3><span class="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-700 text-gray-300">未开始</span></div><p class="text-sm text-gray-400">f. 芯片卡, 智能卡</p></div><div class="ml-4"><button class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">添加学习</button></div></div></div>
             </div>
         </main>
-
     </div>
-
 </body>
 </html>
