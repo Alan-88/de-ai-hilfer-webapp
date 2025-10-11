@@ -104,8 +104,7 @@
   
   function handleWordClickFromManager(word: AnalyzeResponse) {
     showWordLibraryManager = false;
-    searchResult = word;
-    searchQuery = word.query_text;
+    handleSearch(word.query_text);
     fetchRecentItems();
   }
 
