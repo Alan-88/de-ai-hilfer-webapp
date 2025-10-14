@@ -59,9 +59,14 @@
 
   // 智能自适应学习流
   $: if (currentWord) {
+    // --- 【开关】 ---
+    // TODO: 智能问答模式（Quiz Mode）功能开关。设为 true 以启用。
+    // 当前该功能因体验问题暂时搁置，待后续在独立分支进行优化。
+    const enableQuizMode = false;
+    
     learningMode = LearningMode.CLASSIC; // 默认经典模式
     // 如果单词有关联的学习进度并且熟练度达标
-    if (currentWord.progress && currentWord.progress.mastery_level >= QUIZ_MODE_MASTERY_THRESHOLD) {
+    if (enableQuizMode && currentWord.progress && currentWord.progress.mastery_level >= QUIZ_MODE_MASTERY_THRESHOLD) {
       if (Math.random() < QUIZ_MODE_PROBABILITY) {
         learningMode = LearningMode.QUIZ;
       }

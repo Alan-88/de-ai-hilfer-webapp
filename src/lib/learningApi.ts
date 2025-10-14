@@ -8,6 +8,7 @@ import type {
   ReviewQuality
 } from '$lib/types';
 
+// 保持你原有的 API Base URL
 const API_BASE_URL = 'https://de-ai-hilfer-api.onrender.com/api/v1/learning';
 
 /**
@@ -26,8 +27,13 @@ export async function getLearningSession(newWordsLimit = 5): Promise<LearningSes
  * 提交复习结果 V2
  */
 export async function submitReview(entryId: number, quality: ReviewQuality): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/review/v2/${entryId}?quality=${quality}`, {
-    method: 'POST'
+  // 【修复 1】: 后端 V2 接口需要 quality 在请求体(body)中，而不是URL参数
+  const response = await fetch(`${API_BASE_URL}/review/v2/${entryId}`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ quality: quality })
   });
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -54,7 +60,8 @@ export async function getInsightHint(entryId: number): Promise<InsightResponse> 
  * AI 动态生成例句
  */
 export async function generateDynamicExample(entryId: number): Promise<DynamicExampleResponse> {
-  const response = await fetch(`${API_BASE_URL}/example/${entryId}`, {
+  // 【修复 2】: 路由应该是 "/generate-example/"
+  const response = await fetch(`${API_BASE_URL}/generate-example/${entryId}`, {
     method: 'POST'
   });
   if (!response.ok) {
@@ -68,7 +75,8 @@ export async function generateDynamicExample(entryId: number): Promise<DynamicEx
  * AI 动态生成测验题
  */
 export async function generateDynamicQuiz(entryId: number): Promise<DynamicQuizResponse> {
-  const response = await fetch(`${API_BASE_URL}/quiz/${entryId}`, {
+  // 【修复 3】: 路由应该是 "/generate-quiz/"
+  const response = await fetch(`${API_BASE_URL}/generate-quiz/${entryId}`, {
     method: 'POST'
   });
   if (!response.ok) {
