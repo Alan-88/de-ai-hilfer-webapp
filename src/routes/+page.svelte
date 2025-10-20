@@ -114,7 +114,7 @@
   function handleEntryDeleted(event: CustomEvent<string>) { showSuccessToast(event.detail); searchResult = null; fetchRecentItems(); }
   function handleAdvancedSearchSuccess(event: CustomEvent<AnalyzeResponse>) { showAdvancedSearch = false; searchResult = event.detail; searchQuery = event.detail.query_text; fetchRecentItems(); }
   function handleRestoreSuccess(event: CustomEvent<string>) { showDataManagement = false; showSuccessToast(event.detail); clearSearch(); fetchRecentItems(); }
-  function handleWordAdded(message: string) { showWordLibraryManager = false; showSuccessToast(message); fetchRecentItems(); }
+  function handleWordAdded(message: string) { showSuccessToast(message); fetchRecentItems(); }
 
   function handleInstallClick() {
     if (installPromptEvent) {

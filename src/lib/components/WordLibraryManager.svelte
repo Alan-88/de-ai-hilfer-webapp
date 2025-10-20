@@ -99,8 +99,10 @@
       if (!entryId) throw new Error('单词ID缺失，无法添加到学习计划');
       
       await addWordToLearning(entryId);
-      showAddModal = false;
-      selectedWord = null;
+      
+      showAddModal = false; // <-- 新增此行，手动关闭弹窗
+      selectedWord = null; // 同时清空选中的单词
+      
       onWordAdded(`成功添加 "${word.query_text}" 到学习计划`);
 
       await loadLearningProgress();
